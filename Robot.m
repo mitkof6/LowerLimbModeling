@@ -20,42 +20,28 @@ g = [0 0 -9.81]';
 
 %% Syms
 
-th1 = sym('th1');
-th2 = sym('th2');
-th3 = sym('th3');
-th4 = sym('th4');
-th5 = sym('th5');
-th6 = sym('th6');
+syms th1 th2 th3 th4 th5 th6
 
-q=[th1 th2 th3 th4 th5 th6];
+% General coordinates
+q = [th1 th2 th3 th4 th5 th6];
 
-dth1 = sym('dth1');
-dth2 = sym('dth2');
-dth3 = sym('dth3');
-dth4 = sym('dth4');
-dth5 = sym('dth5');
-dth6 = sym('dth6');
+syms dth1 dth2 dth3 dth4 dth5 dth6
 
-dq=[dth1 dth2 dth3 dth4 dth5 dth6];
+dq = [dth1 dth2 dth3 dth4 dth5 dth6];
 
-x0 = sym('x0');
-y0 = sym('y0');
-z0 = sym('z0');
+% Base translation
+syms x0 y0 z0
 
-L1 = sym('L1');
-L2 = sym('L2');
-L3 = sym('L3');
-L4 = sym('L4');
-L5 = sym('L5');
-L6 = sym('L6');
+% Link length
+syms L1 L4 L5 L6
 
-m1 = sym('m1');
-m4 = sym('m4');
-m5 = sym('m5');
-m6 = sym('m6');
+% Link mass
+syms m1 m4 m5 m6
 m = [m1 0 0 m4 m5 m6];
 
 %% DH Parameters a->twist aa->link length d->d th->thi
+
+% Base translation
 x00 = -0.2;
 y00 = -0.2;
 z00 = 1.2;
@@ -66,14 +52,8 @@ DH = [ 0 L1*sin(f) -L1*cos(f) th1;
        0 L4 0 th4;
        0 L5 0 th5;
        0 L6 0 th6 ];
-   
 
-% DH = [ 0 L1*sin(f) -L1*cos(f) 0;
-%        -pi/2 0 0 0;
-%        pi/2 0 0 pi/2;
-%        0 L4 0 0;
-%        0 L5 0 0;
-%        0 L6 0 pi/2 ];
+% Links inertia
 
 I1 = [ 0 0 0;
        0 m1/12*L1^2 0;
@@ -139,6 +119,7 @@ T04 = T03*T34;
 T05 = T04*T45;
 T06 = T05*T56;
 
+% Rotation submatrix
 R = struct('R', []);
 R(1).R = T01(1:3, 1:3);
 R(2).R = T02(1:3, 1:3);
@@ -149,6 +130,7 @@ R(6).R = T06(1:3, 1:3);
 
 %% Kinematics
 
+% Absolute joint position
 p00 = T00(1:3, 4);
 p01 = T01(1:3, 4);
 p02 = T02(1:3, 4);
@@ -158,6 +140,7 @@ p05 = T05(1:3, 4);
 p06 = T06(1:3, 4);
 p0=[p00, p01, p02, p03, p04, p05, p06];
 
+% Absolute joint axis
 z00 = T00(1:3, 3);
 z01 = T01(1:3, 3);
 z02 = T02(1:3, 3);
@@ -175,11 +158,11 @@ for i = 1:length(DH(:, 1))
    Jw = [Jw, z0(:, i)];
 end
 
-J = [ Jv ;
+J = [ Jv;
       Jw];
   
- Jt = [ cross(z00, (p06-p00)) cross(z01, (p06-p01)) cross(z02, (p06-p02)) cross(z03, (p06-p03)) cross(z04, (p06-p04)) cross(z05, (p06-p05));
-       z00 z01 z02 z03 z04 z05 ];
+% Jt = [ cross(z00, (p06-p00)) cross(z01, (p06-p01)) cross(z02, (p06-p02)) cross(z03, (p06-p03)) cross(z04, (p06-p04)) cross(z05, (p06-p05));
+%        z00 z01 z02 z03 z04 z05 ];
   
 %% Dynamics
 
@@ -189,6 +172,7 @@ Translate=[1,0,0,-L/2;
             0,0,1,0;    
             0,0,0,1];
 
+% Absolute CoM positions
 pc01 = subs(p01, L1, L1/2);
 pc02 = p01;
 pc03 = p01;
@@ -197,9 +181,7 @@ pc05 = subs(p05, L5, L5/2);
 pc06 = subs(p06, L6, L6/2);
 pc0 = [pc01, pc02, pc03, pc04, pc05, pc06];
 
-Jc=struct('Jv',[],'Jw',[]);
-
-
+% Jacobian CoM
 for i = 1:length(DH(:,1))
     Jvc=[];
     Jwc=[];
@@ -213,11 +195,12 @@ for i = 1:length(DH(:,1))
        Jvc = [Jvc, [0 0 0]' ];
        Jwc = [Jwc, [0 0 0]' ];
     end
-
     
     Jc(i).Jv=Jvc;
     Jc(i).Jw=Jwc;
 end
+
+% Inertia matrix M(q) 6x6
 
 M =zeros(6,6);
 for i = 1:length(DH(:,1))
@@ -225,6 +208,7 @@ for i = 1:length(DH(:,1))
     M = M + m(i)*Jc(i).Jv'*Jc(i).Jv + Jc(i).Jw'*R(i).R*I(i).I*R(i).R'*Jc(i).Jw;
 end
 
+% C(q,dq) matrix 6x6 Christoffel Symbols
 C=M;
 for k=1:length(DH(:,1)),
     for j=1:length(DH(:,1)),
@@ -236,14 +220,20 @@ for k=1:length(DH(:,1)),
     end
 end
 
-%% Gravity
+% Potential energy
 
 P = 0;
 for i = i:length(DH(:,1))
     P = P + m(i)*g'*pc0(:, i); 
 end
 
-G=[diff(P,th1);diff(P,th2);diff(P,th3);diff(P,th4);diff(P,th5);diff(P,th6)];
+% Gravity matrix
+G = [ diff(P,th1);
+      diff(P,th2);
+      diff(P,th3);
+      diff(P,th4);
+      diff(P,th5);
+      diff(P,th6)];
 
 %% Mat
 

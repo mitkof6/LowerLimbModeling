@@ -4,10 +4,6 @@ clc;
 %close all;
 
 % initial pose
-% subs(pc0, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 1 4 4 1 0 0 pi/2 0 0 pi/2])
-% subs(J, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2828 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2])
-% subs(J, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2])
-% subs(M, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2 0.5 0.5 0.2 0 0 0 0 0 0])
 % subs(J, param, qz)
 
 %% Robot Parameters
@@ -62,33 +58,6 @@ I = [];
 for i = 1:DOF
     I = cat(3, I, [ 0 0 0 ;0 m(i)/12*L(i)^2 0;0 0 m(i)/12*L(i)^2 ]);
 end
-% I1 = [ 0 0 0;
-%        0 m1/12*L1^2 0;
-%        0 0 m1/12*L1^2 ];
-% 
-% I2 = zeros(3, 3);
-% 
-% I3 = zeros(3, 3);
-% 
-% I4 = [ 0 0 0;
-%        0 m4/12*L4^2 0;
-%        0 0 m4/12*L4^2 ];
-%    
-% I5 = [ 0 0 0;
-%        0 m5/12*L5^2 0;
-%        0 0 m5/12*L5^2 ];
-% 
-% I6 = [ 0 0 0;
-%        0 m6/12*L6^2 0;
-%        0 0 m6/12*L6^2 ];
-%    
-% I = struct('I', []);
-% I(1).I = I1;
-% I(2).I = I2;
-% I(3).I = I3;
-% I(4).I = I4;
-% I(5).I = I5;
-% I(6).I = I6;
 
 %% General Link Transformation
 
@@ -119,14 +88,6 @@ for i = 1:DOF+1
     end
     
 end
-% T00 = subs(T00, [x0 y0 z0], [x00 y00 z00]);
-% 
-% T01 = subs(T, state, DH(1,:));
-% T12 = subs(T, state, DH(2,:));
-% T23 = subs(T, state, DH(3,:));
-% T34 = subs(T, state, DH(4,:));
-% T45 = subs(T, [a aa d th], DH(5,:));
-% T56 = subs(T, [a aa d th], DH(6,:));
 
 %% Joint Transformation from link 0->j
 T0j = [];
@@ -138,36 +99,16 @@ for i = 1:DOF
     end
     
 end
-% T01 = T00*T01;
-% T02 = T01*T12;
-% T03 = T02*T23;
-% T04 = T03*T34;
-% T05 = T04*T45;
-% T06 = T05*T56;
-
 
 %% Rotation submatrix from link i->j
 Rij = [];
 for i = 1:DOF
    Rij = cat(3, Rij, Tij(1:3, 1:3, i+1)); 
 end
-% R = struct('R', []);
-% R(1).R = T01(1:3, 1:3);
-% R(2).R = T12(1:3, 1:3);
-% R(3).R = T23(1:3, 1:3);
-% R(4).R = T34(1:3, 1:3);
-% R(5).R = T45(1:3, 1:3);
-% R(6).R = T56(1:3, 1:3);
-% R(1).R = [1 0 0;0 1 0; 0 0 1];
-% R(2).R = [1 0 0;0 0 1; 0 -1 0];
-% R(3).R = [0 0 1;1 0 0; 0 1 0];
-% R(4).R = [1 0 0;0 1 0; 0 0 1];
-% R(5).R = [1 0 0;0 1 0; 0 0 1];
-% R(6).R = [0 -1 0;1 0 0; 0 0 1];
 
 %% Kinematics
 
-% Absolute joint position
+%% Absolute joint position
 p0j = [];
 for i = 1:DOF+1
    if i == 1
@@ -176,16 +117,8 @@ for i = 1:DOF+1
        p0j = cat(2, p0j, T0j(1:3, 4, i-1));
    end
 end
-% p00 = T00(1:3, 4);
-% p01 = T01(1:3, 4);
-% p02 = T02(1:3, 4);
-% p03 = T03(1:3, 4);
-% p04 = T04(1:3, 4);
-% p05 = T05(1:3, 4);
-% p06 = T06(1:3, 4);
-% p0=[p00, p01, p02, p03, p04, p05, p06];
 
-% Absolute joint axis
+%% Absolute joint axis
 z0j = [];
 for i = 1:DOF+1
     if i == 1
@@ -194,16 +127,8 @@ for i = 1:DOF+1
         z0j = cat(2, z0j, T0j(1:3, 3, i-1));
     end
 end
-% z00 = T00(1:3, 3);
-% z01 = T01(1:3, 3);
-% z02 = T02(1:3, 3);
-% z03 = T03(1:3, 3);
-% z04 = T04(1:3, 3);
-% z05 = T05(1:3, 3);
-% z06 = T06(1:3, 3);
-% z0 = [z00, z01, z02, z03, z04, z05, z06];
 
-% Jacobian
+%% Jacobian
 Jv = [];
 Jw = [];
 for i = 1:DOF
@@ -213,27 +138,14 @@ end
 
 J = [ Jv;
       Jw];
-  
-% Jt = [ cross(z00, (p06-p00)) cross(z01, (p06-p01)) cross(z02, (p06-p02)) cross(z03, (p06-p03)) cross(z04, (p06-p04)) cross(z05, (p06-p05));
-%        z00 z01 z02 z03 z04 z05 ];
-  
-%% Dynamics
-
-% Absolute CoM positions
+    
+%% Absolute CoM positions
 pc0j = [];
 for i = 1:DOF
    pc0j = cat(2, pc0j, subs(T0j(1:3, 4, i) , L(i), L(i)/2));
 end
-% pc01 = subs(T01(1:3, 4), L1, L1/2);
-% pc02 = subs(T02(1:3, 4), L2, L2/2);
-% pc03 = subs(T03(1:3, 4), L3, L3/2);
-% pc04 = subs(T04(1:3, 4), L4, L4/2);
-% pc05 = subs(T05(1:3, 4), L5, L5/2);
-% pc06 = subs(T06(1:3, 4), L6, L6/2);
-% 
-% pc0 = [pc01, pc02, pc03, pc04, pc05, pc06];
 
-% Jacobian diff
+%% Jacobian diff
 Jc = [];
 for i = 1:DOF
     Jvc=[];
@@ -247,50 +159,20 @@ for i = 1:DOF
        Jvc = [Jvc, [0 0 0]' ];
        Jwc = [Jwc, [0 0 0]' ];
     end
+    
     Jc = cat(3, Jc, [Jvc; Jwc]);
-%     Jc(i).Jv=Jvc;
-%     Jc(i).Jw=Jwc;
 end
 
+%% Inertia matrix
 M = zeros(6,6);
 for i = 1:DOF
     M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(i)*(Rij(:, :, i)')*Jc(4:6, :, i);
-%     M = M + m(i)*(Jc(i).Jv)'*Jc(i).Jv + (Jc(i).Jw)'*Rij(:, :, i)*I(i).I*Rij(:, :, i)'*Jc(i).Jw;
 end
 
-A = subs(M, param, qz)
+%A = subs(M, param, qz)
 
-% Jacobian CoM
-Jc = [];
-for i = 1:DOF
-    Jvc=[];
-    Jwc=[];
-    
-    for j = 1:i
-       Jvc = [Jvc, cross(z0j(:, j), (pc0j(:, i)-p0j(:, j)))];
-       Jwc = [Jwc, z0j(:, j)];
-    end
-    
-    for j = i+1:DOF
-       Jvc = [Jvc, [0 0 0]' ];
-       Jwc = [Jwc, [0 0 0]' ];
-    end
-    
-    Jc(i).Jv=Jvc;
-    Jc(i).Jw=Jwc;
-end
 
-% Inertia matrix M(q) 6x6
-
-M =zeros(6,6);
-for i = 1:DOF
-    
-    M = M + m(i)*(Jc(i).Jv)'*Jc(i).Jv + (Jc(i).Jw)'*Rij(:, :, i)*I(i)*(Rij(:, :, i))'*Jc(i).Jw;
-end
-
-subs(M, param, qz)
-
-% C(q,dq) matrix 6x6 Christoffel Symbols
+%% C(q,dq) matrix 6x6 Christoffel Symbols
 C = M;
 for k = 1:DOF
     for j = 1:DOF
@@ -302,14 +184,14 @@ for k = 1:DOF
     end
 end
 
-% Potential energy
+%% Potential energy
 
 P = 0;
 for i = i:DOF
     P = P + m(i)*g'*pc0j(:, i); 
 end
 
-% Gravity matrix
+%% Gravity matrix
 G = [ diff(P,th1);
       diff(P,th2);
       diff(P,th3);
@@ -317,8 +199,4 @@ G = [ diff(P,th1);
       diff(P,th5);
       diff(P,th6)];
 
-%% Mat
 
-%Jr = subs(J, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2828 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2]);
-%Mr = subs(M, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2828 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2]);
-%Cr = subs(C, [m1 m4 m5 m6 L1 L4 L5 L6 th1 th2 th3 th4 th5 th6], [1 1 1 1 0.2828 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2]);

@@ -4,14 +4,16 @@ clc;
 %close all;
 
 % initial pose
-% subs(J, param, qz)
+% subs(M, param, qz)
+% subs(C, [param dq], [qz 1 1 1 1 1 1])
 
 %% Robot Parameters
 % Right leg
  
 qz = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2];
 
-g = [0 0 -9.81]';
+g = [0 0 9.81]'; %+9.81 Potential reference is base joint
+%g = [0 -9.81 0]';
 
 %% Syms
 
@@ -44,16 +46,21 @@ x00 = 0;
 y00 = 0;
 z00 = 0;
 
-DH = [ 0 L1 0 th1; 
+DH = [ 0 L1 -L1 th1; 
        -pi/2 0 0 th2;
        pi/2 0 0 th3;
        0 L4 0 th4;
        0 L5 0 th5;
        0 L6 0 th6 ];
 
+% two link debugging
+% DH = [ 0 L1 0 th1;
+%        0 L2 0 th2];
+
 DOF = length(DH(:, 1));
 
 %% Links inertia
+
 I = [];
 for i = 1:DOF
     I = cat(3, I, [ 0 0 0 ;0 m(i)/12*L(i)^2 0;0 0 m(i)/12*L(i)^2 ]);
@@ -90,6 +97,7 @@ for i = 1:DOF+1
 end
 
 %% Joint Transformation from link 0->j
+
 T0j = [];
 for i = 1:DOF
     if i == 1
@@ -101,6 +109,7 @@ for i = 1:DOF
 end
 
 %% Rotation submatrix from link i->j
+
 Rij = [];
 for i = 1:DOF
    Rij = cat(3, Rij, Tij(1:3, 1:3, i+1)); 
@@ -109,6 +118,7 @@ end
 %% Kinematics
 
 %% Absolute joint position
+
 p0j = [];
 for i = 1:DOF+1
    if i == 1
@@ -119,6 +129,7 @@ for i = 1:DOF+1
 end
 
 %% Absolute joint axis
+
 z0j = [];
 for i = 1:DOF+1
     if i == 1
@@ -129,6 +140,7 @@ for i = 1:DOF+1
 end
 
 %% Jacobian
+
 Jv = [];
 Jw = [];
 for i = 1:DOF
@@ -140,12 +152,14 @@ J = [ Jv;
       Jw];
     
 %% Absolute CoM positions
+
 pc0j = [];
 for i = 1:DOF
    pc0j = cat(2, pc0j, subs(T0j(1:3, 4, i) , L(i), L(i)/2));
 end
 
 %% Jacobian diff
+
 Jc = [];
 for i = 1:DOF
     Jvc=[];
@@ -163,40 +177,45 @@ for i = 1:DOF
     Jc = cat(3, Jc, [Jvc; Jwc]);
 end
 
+
 %% Inertia matrix
-M = zeros(6,6);
+
+M = zeros(DOF, DOF);
 for i = 1:DOF
-    M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(i)*(Rij(:, :, i)')*Jc(4:6, :, i);
+    M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(:, :, i)*(Rij(:, :, i)')*Jc(4:6, :, i);
 end
 
-%A = subs(M, param, qz)
 
+%% C(q, dq) Coriolis matrix 6x6 Christoffel Symbols
 
-%% C(q,dq) matrix 6x6 Christoffel Symbols
 C = M;
 for k = 1:DOF
     for j = 1:DOF
-        C(k,j) = 0;
+        C(k, j) = 0;
         for i = 1:DOF
-    
-        C(k,j) = C(k,j)+1/2*(diff(M(k,j),q(i))+diff(M(k,i),q(j))-diff(M(i,j),q(k)))*dq(i);
+            C(k,j) = C(k,j)+1/2*(diff(M(k,j), q(i)) + diff(M(k, i), q(j)) - diff(M(i, j), q(k)))*dq(i);
         end
     end
 end
 
-%% Potential energy
+%% Gravity
 
-P = 0;
-for i = i:DOF
-    P = P + m(i)*g'*pc0j(:, i); 
+Jg = [];
+GM = [];
+for i = 1:DOF
+   Jg = [Jg -Jc(1:3, :, i)'];
+   GM = [GM ; -m(i)*g];
 end
+G = Jg*GM;
 
-%% Gravity matrix
-G = [ diff(P,th1);
-      diff(P,th2);
-      diff(P,th3);
-      diff(P,th4);
-      diff(P,th5);
-      diff(P,th6)];
-
+% P = 0;
+% for i = i:DOF
+%     P = P + m(i)*g'*pc0j(:, i); 
+% end
+% 
+% %% Gravity matrix
+% G = [];
+% for i = 1:DOF
+%    G = cat(1, G, diff(P,q(i)));
+% end
 

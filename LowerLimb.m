@@ -6,12 +6,15 @@ clc;
 % initial pose
 % subs(M, param, qz)
 % subs(C, [param dq], [qz 1 1 1 1 1 1])
+% subs( , q, )
+% subs( , q, 
 
 %% Robot Parameters
 % Right leg
  
-qz = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2];
-
+%qz = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2 0 0 pi/2 0 0 pi/2];
+qz = [0 0 pi/2 0 0 pi/2];
+qzd = qz + [0 0 0.02 0.02 -0.02 0];
 g = [0 0 9.81]'; %+9.81 Potential reference is base joint
 %g = [0 -9.81 0]';
 
@@ -26,6 +29,10 @@ syms dth1 dth2 dth3 dth4 dth5 dth6
 
 dq = [dth1 dth2 dth3 dth4 dth5 dth6];
 
+syms ddth1 ddth2 ddth3 ddth4 ddth5 ddth6
+
+ddq = [ddth1 ddth2 ddth3 ddth4 ddth5 ddth6];
+
 % Base translation
 syms x0 y0 z0
 
@@ -39,6 +46,7 @@ m = [m1 m2 m3 m4 m5 m6];
 
 param = [m L q];
 
+the = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2];
 %% DH Parameters a->twist aa->link length d->d th->thi
 
 % Base translation
@@ -108,6 +116,8 @@ for i = 1:DOF
     
 end
 
+
+
 %% Rotation submatrix from link i->j
 
 Rij = [];
@@ -151,12 +161,25 @@ end
 J = [ Jv;
       Jw];
     
+J = subs(J, [m L], the);
+J = simplify(J);
+
+
 %% Absolute CoM positions
 
 pc0j = [];
 for i = 1:DOF
    pc0j = cat(2, pc0j, subs(T0j(1:3, 4, i) , L(i), L(i)/2));
 end
+
+pc0j = subs(pc0j, [m L], the);
+pc0j = simplify(pc0j);
+
+T0j = subs(T0j, [m L], the);
+T0j = simplify(T0j);
+
+Tij = subs(Tij, [m L], the);
+Tij = simplify(Tij);
 
 %% Jacobian diff
 
@@ -177,6 +200,7 @@ for i = 1:DOF
     Jc = cat(3, Jc, [Jvc; Jwc]);
 end
 
+Jc = simplify(Jc);
 
 %% Inertia matrix
 
@@ -185,6 +209,7 @@ for i = 1:DOF
     M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(:, :, i)*(Rij(:, :, i)')*Jc(4:6, :, i);
 end
 
+M = simplify(M);
 
 %% C(q, dq) Coriolis matrix 6x6 Christoffel Symbols
 
@@ -198,6 +223,8 @@ for k = 1:DOF
     end
 end
 
+C = simplify(C);
+
 %% Gravity
 
 Jg = [];
@@ -208,6 +235,13 @@ for i = 1:DOF
 end
 G = Jg*GM;
 
+G = simplify(G);
+
+Tau=M*ddq'+C*dq'+G;
+Tau = simplify(Tau);
+
+savefile='Model.mat';
+save(savefile,'Tau','J', 'G', 'M', 'C', 'T0j','q','dq','ddq');
 % P = 0;
 % for i = i:DOF
 %     P = P + m(i)*g'*pc0j(:, i); 

@@ -194,7 +194,7 @@ for i = 1:DOF
     M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(:, :, i)*(Rij(:, :, i)')*Jc(4:6, :, i);
 end
 
-M = simplify(M)
+%M = simplify(M)
 
 %% C(q, dq) Coriolis matrix 6x6 Christoffel Symbols
 
@@ -208,7 +208,7 @@ for k = 1:DOF
     end
 end
 
-C = simplify(C)
+%C = simplify(C)
 
 %% Gravity
 
@@ -220,12 +220,12 @@ for i = 1:DOF
 end
 G = Jg*GM;
 
-%G = simplify(G)
+G = simplify(G)
 
 %% Save model
 Tau = M*ddq' + C*dq' + G;
-Tau = simplify(Tau)
+%Tau = simplify(Tau)
 
-save('Model.mat', 'Tau', 'J', 'G', 'M', 'C', 'T0j', 'q', 'dq', 'ddq');
+save('Model.mat', 'Tau', 'J', 'Jc', 'G', 'M', 'C', 'T0j', 'q', 'dq', 'ddq');
 
 

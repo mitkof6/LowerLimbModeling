@@ -4,10 +4,29 @@ clc;
 startup_rvc
 LowerLimbRT
 
+syms L1 L2 L3 L4 L5 L6
+L = [L1 L2 L3 L4 L5 L6];
+
+% Link mass
+syms m1 m2 m3 m4 m5 m6
+m = [m1 m2 m3 m4 m5 m6];
+
+
+% Gravity
+syms gz;
+g = [0 0 gz]';
+
+
+param = [m L gz];
+
+the = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2 9.81];
+
 A=load('Model.mat');
-T0j=A.T0j;
-q=A.q;
-dq=A.dq;
+T0j = A.T0j;
+T0j = subs(T0j, param, the);
+
+q = A.q;
+dq = A.dq;
 ddq=A.ddq;
 Tau=A.Tau;
 
@@ -30,9 +49,11 @@ for i = 2:length(t)
    [qeval(i, :), f] = InvKin(pos, qeval(i-1,:), T0j, q);
 end
 
-Tau_traj=subs(Tau,[dq ddq],[dqtraj ddqtraj]);
-Tau_traj=subs(Tau_traj,q,qtraj);
-
 
 %bot.plot(qeval)
+
+
+
+
+
 

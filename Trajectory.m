@@ -1,4 +1,5 @@
 clear all;
+close all;
 clc;
 
 %% Load robotics toolbox
@@ -35,19 +36,26 @@ dq = model.dq;
 ddq = model.ddq;
 Tau = model.Tau;
 
-%% Trajectory designe
+%% Trajectory generation
 
 t = 0:0.1:1;
 
 q0 = [0 pi/18 pi/2 pi/6 -pi/6 pi/2];
 q1 = [0 pi/18 pi/2 pi/2 0 pi/18];
+q2 = [0 pi/18 pi/2 pi -pi/6 pi/2];
 
-qtraj = t'*q1+(1-t)'*q0;
-dqtraj = (q1-q0)';
-ddqtraj = [0 0 0 0 0 0]';
+qTraj = t'*q1+(1-t)'*q0;
+dqTraj = (q1-q0)';
+ddqTraj = [0 0 0 0 0 0]';
 
+qq = t'*q2+(1-t)'*q1;
+dqq = (q2-q1)';
 
-% %% Computation
+qTraj = [qTraj; qq];
+%dqTraj = [dqTraj; dqq];
+%ddqTraj = [ddqTraj; ddqTraj];
+
+% %% Inverse kinematics
 % qeval = zeros(size(t),6);
 % qeval(1,:) = q0;
 % 
@@ -58,55 +66,45 @@ ddqtraj = [0 0 0 0 0 0]';
 % end
 
 %% Plot
-%bot.plot(qeval)
+
 figure;
-bot.plot(qtraj)
-%%
+bot.plot(qTraj)
+
+%% Generate torque
 Tau = [];
-for i = 1:length(t)
-   Tau = cat(1, Tau, fdyn(ddqtraj, dqtraj, qtraj(i, :)));
+for i = 1:2*length(t)
+   Tau = cat(1, Tau, fdyn(ddqTraj, dqTraj, qTraj(i, :)));
 end
 
-ts = 0.1;
-tstop = 1.0;
+
+%% Simulate
+
+TS = 0.1;
+tStop = 2.0;
 T = 0;
 iter = 1;
-Xn = [0 pi/18 pi/2 pi/6 -pi/6 pi/2 dqtraj'];
+Xn = [0 pi/18 pi/2 pi/6 -pi/6 pi/2 dqTraj'];
 q = [];
 Xs = [];
 Tau_c=[0 0 0 0 0 0]';
 
-e_i=0;
+while T(end) <= tStop
 
-while T(end)<=tstop
-
-    [tsol, Xsol] = ode45(@idyn, [(iter-1)*ts (iter)*ts], Xn, [], [Tau(iter,:),qtraj(iter,:),dqtraj']');
+    [tSolution, xSolution] = ode45(@idyn, [(iter-1)*TS (iter)*TS], Xn, [], [Tau(iter,:),qTraj(iter,:),dqTraj']');
     
-    %q = [q;Xsol(:, 1:6)];
-    tsol = tsol(end); Xsol=Xsol(end,1:end);
+    tSolution = tSolution(end); 
+    xSolution = xSolution(end,1:end);
     
     
-    
-    T = [T, tsol];
-    Xs = [Xs;Xsol];
-    Xn = Xs(end, 1:end);
-    q=[q;Xn(1:6)];
+    Xn = xSolution(end, 1:end);
+    q = [q; xSolution(:, 1:6)];
+    T = [T; tSolution];
     %bot.plot(q(end, :));
     
-    
-%     %% Control
-%     
-%     e=qtraj(iter,:)-q(iter,:);
-%     e_d=dqtraj'-Xsol(7:12);
-%     Kp=diag([10 10 10 100 100 100]);
-%     Kd=diag([3 4 4 1 1 1]);
-%     Ki=diag([3 4 4 15 11 11]);
-%     e_i=e_i+e.*ts;
-%     
-%     Tau_c=Kp*e'%+Kd*e_d'+Ki*e_i'
-    
+        
     %% Next Iteration
-    iter = iter+1
+    
+    iter = iter+1;
 end
 
 figure;

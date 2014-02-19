@@ -4,6 +4,22 @@
 % U = input 
 function [Xdot] = idyn(t, X, U)
 
+
+
+%% Control
+q=X(1:6)';dq=X(7:12)';
+qref=U(7:12)';dqref=U(13:18)';
+e=qref-q;
+e_d=dqref-dq;
+Kp=diag([10 10 10 100 100 100]);
+Kd=diag([3 4 4 1 1 1]);
+Ki=diag([3 1 1 1 1 1]);
+%e_i = 0;
+%e_i=e_i+e.*0.01;
+
+Tau_c=Kp*e'+Kd*e_d';%+Ki*e_i';
+Tau=U(1:6)+Tau_c ;
+
 th1 = X(1); 
 dth1 = X(7); 
 th2 = X(2); 
@@ -103,6 +119,6 @@ G(6) = 0.49*cos(conj(th3) - 1.0*conj(th4) - 1.0*conj(th5) - 1.0*conj(th6)) - 0.4
 
 Minv = inv(M) ; 
 
-ddq = Minv*(U-C*X(7:end)-G); 
+ddq = Minv*(Tau-C*X(7:end)-G); 
 Xdot = [ X(7) X(8) X(9) X(10) X(11) X(12) ddq(1) ddq(2) ddq(3) ddq(4) ddq(5) ddq(6) ]';
 end

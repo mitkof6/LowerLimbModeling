@@ -108,8 +108,8 @@ for i = 1:DOF
     
 end
 
-T0j = simplify(T0j)
-save('T0j.mat', 'T0j');
+%T0j = simplify(T0j)
+%save('T0j.mat', 'T0j');
 
 %% Rotation submatrix from link i->j
 
@@ -154,8 +154,8 @@ end
 J = [ Jv;
       Jw];
     
-J = simplify(J)
-save('J.mat', 'J');
+%J = simplify(J)
+%save('J.mat', 'J');
 
 %% Absolute CoM positions
 
@@ -164,8 +164,8 @@ for i = 1:DOF
    pc0j = cat(2, pc0j, subs(T0j(1:3, 4, i) , L(i), L(i)/2));
 end
 
-pc0j = simplify(pc0j)
-save('pc0j.mat', 'pc0j');
+%pc0j = simplify(pc0j)
+%save('pc0j.mat', 'pc0j');
 
 %% Jacobian diff
 
@@ -186,8 +186,8 @@ for i = 1:DOF
     Jc = cat(3, Jc, [Jvc; Jwc]);
 end
 
-Jc = simplify(Jc)
-save('Jc.mat', 'Jc');
+%Jc = simplify(Jc)
+%save('Jc.mat', 'Jc');
 
 %% Inertia matrix
 
@@ -196,8 +196,8 @@ for i = 1:DOF
     M = M + m(i)*(Jc(1:3, :, i)')*Jc(1:3, :, i) + (Jc(4:6, :, i)')*Rij(:, :, i)*I(:, :, i)*(Rij(:, :, i)')*Jc(4:6, :, i);
 end
 
-M = simplify(M)
-save('M.mat', 'M');
+%M = simplify(M)
+%save('M.mat', 'M');
 
 %% C(q, dq) Coriolis matrix 6x6 Christoffel Symbols
 
@@ -211,8 +211,8 @@ for k = 1:DOF
     end
 end
 
-C = simplify(C)
-save('C.mat', 'C');
+%C = simplify(C)
+%save('C.mat', 'C');
 
 %% Gravity
 
@@ -229,8 +229,8 @@ save('G.mat', 'G');
 
 %% Dynamics equation
 Tau = M*ddq' + C*dq' + G;
-Tau = simplify(Tau)
+%Tau = simplify(Tau)
 
-save('Tau.mat', 'Tau');
+%save('Tau.mat', 'Tau');
 
 

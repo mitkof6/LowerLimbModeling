@@ -224,8 +224,8 @@ for i = 1:DOF
 end
 G = Jg*GM;
 
-G = simplify(G)
-save('G.mat', 'G');
+%G = simplify(G)
+%save('G.mat', 'G');
 
 %% Dynamics equation
 Tau = M*ddq' + C*dq' + G;

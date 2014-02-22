@@ -6,7 +6,15 @@ clc;
 
 %% Model
 model = load('Model.mat');
-modelParam = [1 0 0 1 1 1 0.2 0 0 0.5 0.5 0.2 9.81];
+bone = load('L.mat');
+bone = bone.L;
+modelParam = [1 0 0 1 1 1 bone(1) 0 0 bone(2) bone(3) bone(4) 9.81];
+M = load('M.mat');
+G = load('G.mat');
+M = M.M;
+G = G.G;
+
+
 
 %% Syms
 syms th1 th2 th3 th4 th5 th6
@@ -41,7 +49,9 @@ param = [m L gz];
 
 %% fdyn code generator
 
-Tau = subs(model.Tau, param, modelParam);
+%Tau = subs(model.Tau, param, modelParam);
+Tau = M*ddq'+model.C*dq'+G;
+Tau = subs(Tau, param, modelParam);
 digits(3);
 Tau = vpa(Tau);
 
@@ -72,9 +82,9 @@ fclose(fDyn);
 
 %% idyn code generator
 
-M = subs(model.M, param, modelParam);
+M = subs(M, param, modelParam);
 C = subs(model.C, param, modelParam);
-G = subs(model.G, param, modelParam);
+G = subs(G, param, modelParam);
 
 digits(3);
 M = vpa(M);
